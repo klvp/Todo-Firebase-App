@@ -78,7 +78,9 @@ function UpdateProfile() {
             </Button>
           </Form>
           <div className="w-100 text-center mt-4">
-            <Link to="/">Cancel</Link>
+            <button className="btn btn-primary" onClick={() => navigate(-1)}>
+              Cancel
+            </button>
           </div>
         </Card.Body>
       </Card>

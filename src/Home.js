@@ -2,7 +2,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { TextField, Button, Alert, Menu, MenuItem } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
-import { db } from "./firebase";
+import { db, app } from "./firebase";
 import {
   collection,
   addDoc,
@@ -13,13 +13,16 @@ import {
   query,
   orderBy,
   onSnapshot,
+  getDocs,
 } from "firebase/firestore";
+
+import { onAuthStateChanged, getAuth } from "firebase/auth";
 
 import { Output } from "./Output";
 import { PopupModal } from "./PopupModal";
 import { useAuth } from "./context/AuthContext";
 import { useNavigate } from "react-router-dom";
-
+const auth = getAuth(app);
 function Home() {
   const [todos, setTodos] = useState([]);
 
@@ -51,6 +54,7 @@ function Home() {
     })
       .then(() => {
         setInput("");
+        getTodos();
       })
       .catch((err) => {
         alert(err.message);
@@ -84,9 +88,12 @@ function Home() {
   const getTodos = async () => {
     const q = query(todosCollectionRef, orderBy("timestamp", "desc"));
 
-    await onSnapshot(q, (res) => {
-      setTodos(res.docs.map((doc) => ({ ...doc.data(), id: doc.id })));
-    });
+    const data = await getDocs(q);
+    setTodos(data.docs.map((doc) => ({ ...doc.data(), id: doc.id })));
+    // onSnapshot(q, (res) => {
+    //   setTodos(res.docs.map((doc) => ({ ...doc.data(), id: doc.id })));
+    //   console.log(res.docs.map((doc) => ({ ...doc.data(), id: doc.id })));
+    // });
   };
 
   const updateTodo = (id) => {
@@ -95,6 +102,7 @@ function Home() {
       .then(() => {
         setValue("");
         setShowModal(false);
+        getTodos();
       })
       .catch((err) => {
         alert(err.message);
@@ -104,9 +112,11 @@ function Home() {
   const deleteTodo = (id) => {
     const docToDelete = doc(db, currentUser.email, id);
     deleteDoc(docToDelete).catch((err) => alert(err.message));
+    getTodos();
   };
 
   useEffect(() => {
+    getTodos();
     if (!ranEffect.current) {
       getTodos();
     }
@@ -140,7 +150,6 @@ function Home() {
 
     window.location.href = "/update-email";
   }
-
   if (localStorage.getItem("email")) {
     let email = localStorage.getItem("email");
     localStorage.removeItem("email");
@@ -156,8 +165,11 @@ function Home() {
     data.map((item) => {
       return deleteDoc(doc(db, email, item.id));
     });
+    getTodos();
   }
-
+  onAuthStateChanged(auth, (user) => {
+    getTodos();
+  });
   return (
     <div className="App">
       <div className="d-flex my-1">

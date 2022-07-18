@@ -69,9 +69,9 @@ function UpdateEmail() {
               localStorage.removeItem("todos");
             }}
           >
-            <Link to="/" on>
+            <button className="btn btn-primary" onClick={() => navigate(-1)}>
               Cancel
-            </Link>
+            </button>
           </div>
         </Card.Body>
       </Card>
